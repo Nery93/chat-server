@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/Nery93/chat-server/internal/handler"
 )
 
 func main() {
@@ -18,7 +20,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:    ":" + port,
-		Handler: nil, // Use the default HTTP mux
+		Handler: handler.NewRouter(), // Use the router from the handler package
 	}
 
 	slog.Info("Server Started", "port", port)

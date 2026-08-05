@@ -39,6 +39,6 @@ func (c *Client) ReadPump() {
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
 		Conn: conn,
-		Send: make(chan []byte),
+		Send: make(chan []byte, 256),
 	}
 }
