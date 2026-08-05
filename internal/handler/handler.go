@@ -2,9 +2,16 @@ package handler
 
 import (
 	"net/http"
+	"sync"
 
-	"github.com/gorilla/websocket"
 	"github.com/Nery93/chat-server/internal/client"
+	"github.com/Nery93/chat-server/internal/room"
+	"github.com/gorilla/websocket"
+)
+
+var (
+	mu    sync.Mutex
+	rooms = make(map[string]*room.Room)
 )
 
 var upgrader = websocket.Upgrader{
@@ -17,7 +24,18 @@ func NewRouter() *http.ServeMux {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /ws/{sala}", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /ws/{sala_geral}", func(w http.ResponseWriter, r *http.Request) {
+
+		sala := r.PathValue("sala_geral")
+		mu.Lock()
+		roomObj, exists := rooms[sala]
+
+		if !exists {
+			roomObj = room.NewRoom()
+			rooms[sala] = roomObj
+		}
+		mu.Unlock()
+
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			http.Error(w, "Failed to upgrade to WebSocket", http.StatusInternalServerError)
@@ -25,9 +43,11 @@ func NewRouter() *http.ServeMux {
 		}
 		defer conn.Close()
 
-		client := client.NewClient(conn)
+		client := client.NewClient(conn, roomObj.Broadcast)
+		roomObj.EntrarNaSala(client)
 		go client.WritePump()
 		client.ReadPump()
+		roomObj.SairDaSala(client)
 	})
 
 	return mux

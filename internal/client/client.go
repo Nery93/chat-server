@@ -29,18 +29,19 @@ func (c *Client) WritePump(){
 
 func (c *Client) ReadPump() {
 	for {
-		_, _, err := c.Conn.ReadMessage()
+		_, message, err := c.Conn.ReadMessage()
 		if err != nil {
 			break
 		}
+		c.Broadcast(message)
 	}
 }
 
 
-func NewClient(conn *websocket.Conn) *Client {
+func NewClient(conn *websocket.Conn, broadcast func(message []byte)) *Client {
 	return &Client{
-		Conn: conn,
-		Send: make(chan []byte, 256),
-		Broadcast: func(message []byte) {},
+		Conn:      conn,
+		Send:      make(chan []byte, 256),
+		Broadcast: broadcast,
 	}
 }

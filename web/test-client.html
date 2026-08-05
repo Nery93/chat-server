@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Webchat — Test Client</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --border: #2a2f3a;
+    --text: #e6e8ec;
+    --text-dim: #8b93a3;
+    --accent: #5b8cff;
+    --accent-dim: #2a3a63;
+    --ok: #35c37b;
+    --err: #ff5d5d;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    max-width: 720px;
+    margin: 0 auto;
+    height: 100vh;
+    padding: 16px;
+  }
+  header {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .conn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .conn-row input {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    outline: none;
+  }
+  .conn-row input:focus { border-color: var(--accent); }
+  #url { flex: 1 1 180px; min-width: 140px; }
+  #room { flex: 0 1 110px; }
+  #username { flex: 0 1 130px; }
+  button {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.88; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  #connectBtn { background: var(--accent); color: white; }
+  #connectBtn.connected { background: var(--panel-2); color: var(--err); border: 1px solid var(--border); }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--err); }
+  .dot.on { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+
+  #log {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .empty-hint {
+    margin: auto;
+    color: var(--text-dim);
+    font-size: 13px;
+    text-align: center;
+    max-width: 320px;
+    line-height: 1.5;
+  }
+  .msg { display: flex; flex-direction: column; max-width: 78%; }
+  .msg.mine { align-self: flex-end; align-items: flex-end; }
+  .msg.theirs { align-self: flex-start; align-items: flex-start; }
+  .msg.system { align-self: center; max-width: 100%; }
+  .meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 3px;
+    padding: 0 4px;
+  }
+  .bubble {
+    padding: 9px 13px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.4;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  .msg.mine .bubble { background: var(--accent); color: white; border-bottom-right-radius: 4px; }
+  .msg.theirs .bubble { background: var(--panel-2); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .msg.system .bubble {
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-style: italic;
+    padding: 2px;
+  }
+
+  footer {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  #text {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+    outline: none;
+  }
+  #text:focus { border-color: var(--accent); }
+  #sendBtn { background: var(--accent); color: white; padding: 0 20px; border-radius: 10px; }
+
+  #log::-webkit-scrollbar { width: 8px; }
+  #log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Webchat — Cliente de Teste</h1>
+  <div class="conn-row">
+    <input id="url" type="text" value="ws://localhost:8080" placeholder="ws://localhost:8080">
+    <input id="room" type="text" value="geral" placeholder="sala">
+    <input id="username" type="text" value="" placeholder="teu nome">
+    <button id="connectBtn">Ligar</button>
+  </div>
+  <div class="status">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">desligado</span>
+  </div>
+</header>
+
+<div id="log">
+  <div class="empty-hint">Preenche o teu nome, escolhe uma sala e liga-te.<br>Abre este ficheiro noutra aba com um nome diferente para simulares dois clientes.</div>
+</div>
+
+<footer>
+  <input id="text" type="text" placeholder="Escreve uma mensagem..." disabled>
+  <button id="sendBtn" disabled>Enviar</button>
+</footer>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const urlInput = $('url'), roomInput = $('room'), userInput = $('username');
+  const connectBtn = $('connectBtn'), statusDot = $('statusDot'), statusText = $('statusText');
+  const log = $('log'), textInput = $('text'), sendBtn = $('sendBtn');
+
+  let ws = null;
+  let username = '';
+  let hintCleared = false;
+
+  function clearHint() {
+    if (!hintCleared) { log.innerHTML = ''; hintCleared = true; }
+  }
+
+  function addSystem(text) {
+    clearHint();
+    const el = document.createElement('div');
+    el.className = 'msg system';
+    el.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
+    log.appendChild(el);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function addMessage(sender, text, mine) {
+    clearHint();
+    const el = document.createElement('div');
+    el.className = 'msg ' + (mine ? 'mine' : 'theirs');
+    const time = new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+    el.innerHTML = `
+      <div class="meta">${escapeHtml(sender)} · ${time}</div>
+      <div class="bubble">${escapeHtml(text)}</div>
+    `;
+    log.appendChild(el);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function setConnected(isConnected) {
+    statusDot.classList.toggle('on', isConnected);
+    statusText.textContent = isConnected ? 'ligado' : 'desligado';
+    connectBtn.textContent = isConnected ? 'Desligar' : 'Ligar';
+    connectBtn.classList.toggle('connected', isConnected);
+    textInput.disabled = !isConnected;
+    sendBtn.disabled = !isConnected;
+    urlInput.disabled = isConnected;
+    roomInput.disabled = isConnected;
+    userInput.disabled = isConnected;
+  }
+
+  function connect() {
+    const base = urlInput.value.trim().replace(/\/+$/, '');
+    const room = roomInput.value.trim();
+    username = userInput.value.trim() || 'anon' + Math.floor(Math.random() * 1000);
+    userInput.value = username;
+
+    if (!room) { addSystem('Precisas de indicar uma sala.'); return; }
+
+    const wsUrl = `${base}/ws/${encodeURIComponent(room)}`;
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      setConnected(true);
+      addSystem(`Ligado a "${room}" como ${username}.`);
+    };
+
+    ws.onmessage = (event) => {
+      const raw = event.data;
+      const sepIndex = raw.indexOf(': ');
+      let sender = 'desconhecido', text = raw;
+      if (sepIndex !== -1) {
+        sender = raw.slice(0, sepIndex);
+        text = raw.slice(sepIndex + 2);
+      }
+      addMessage(sender, text, sender === username);
+    };
+
+    ws.onclose = () => {
+      setConnected(false);
+      addSystem('Ligação fechada.');
+      ws = null;
+    };
+
+    ws.onerror = () => {
+      addSystem('Erro na ligação — vê se o servidor está a correr e se o CheckOrigin aceita este origin.');
+    };
+  }
+
+  function disconnect() {
+    if (ws) ws.close();
+  }
+
+  function send() {
+    const text = textInput.value.trim();
+    if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(`${username}: ${text}`);
+    textInput.value = '';
+  }
+
+  connectBtn.addEventListener('click', () => {
+    if (ws) disconnect(); else connect();
+  });
+
+  sendBtn.addEventListener('click', send);
+  textInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') send();
+  });
+</script>
+
+</body>
+</html>
