@@ -8,6 +8,7 @@ import (
 type Client struct {
 	Conn *websocket.Conn
 	Send chan []byte
+	Broadcast func(message []byte)
 }
 
 func (c *Client) WritePump(){
@@ -40,5 +41,6 @@ func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
 		Conn: conn,
 		Send: make(chan []byte, 256),
+		Broadcast: func(message []byte) {},
 	}
 }
