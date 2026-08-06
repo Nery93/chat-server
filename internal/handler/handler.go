@@ -41,7 +41,6 @@ func NewRouter() *http.ServeMux {
 			http.Error(w, "Failed to upgrade to WebSocket", http.StatusInternalServerError)
 			return
 		}
-		defer conn.Close()
 
 		client := client.NewClient(conn, roomObj.Broadcast)
 		roomObj.EntrarNaSala(client)
