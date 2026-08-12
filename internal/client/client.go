@@ -68,7 +68,8 @@ func (c *Client) ReadPump() {
 		if err := json.Unmarshal(raw, &msg); err != nil {
 			continue
 		}
-		msg.Type = "chat"
+		msg.Type = "chat" 
+		msg.User = c.Username
 		convert, err := json.Marshal(msg)
 		if err != nil {
 			continue

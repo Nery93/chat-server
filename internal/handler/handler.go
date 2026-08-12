@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"sync"
 
 	"github.com/Nery93/chat-server/internal/client"
+	"github.com/Nery93/chat-server/internal/message"
 	"github.com/Nery93/chat-server/internal/room"
 	"github.com/gorilla/websocket"
 )
@@ -51,6 +53,16 @@ func NewRouter() *http.ServeMux {
 		client := client.NewClient(conn, roomObj.Broadcast)
 		client.Username = user
 		roomObj.EntrarNaSala(client)
+
+		var enterRoom message.Message
+		enterRoom.Type = "join"
+		enterRoom.User = user
+		enterRoomJSON, err := json.Marshal(enterRoom)
+		if err != nil {
+			return
+		}
+		roomObj.Broadcast(enterRoomJSON)
+
 		go client.WritePump()
 		client.ReadPump()
 		roomObj.SairDaSala(client)
