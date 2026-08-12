@@ -257,14 +257,19 @@
     };
 
     ws.onmessage = (event) => {
-      const raw = event.data;
-      const sepIndex = raw.indexOf(': ');
-      let sender = 'desconhecido', text = raw;
-      if (sepIndex !== -1) {
-        sender = raw.slice(0, sepIndex);
-        text = raw.slice(sepIndex + 2);
+      let msg;
+      try {
+        msg = JSON.parse(event.data);
+      } catch (e) {
+        addSystem(`Mensagem não reconhecida: ${event.data}`);
+        return;
       }
-      addMessage(sender, text, sender === username);
+
+      if (msg.type === 'chat') {
+        addMessage(msg.user, msg.text, msg.user === username);
+      } else {
+        addSystem(msg.text || `[${msg.type}] ${msg.user || ''}`);
+      }
     };
 
     ws.onclose = () => {
@@ -285,7 +290,7 @@
   function send() {
     const text = textInput.value.trim();
     if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
-    ws.send(`${username}: ${text}`);
+    ws.send(JSON.stringify({ type: 'chat', user: username, text: text }));
     textInput.value = '';
   }
 

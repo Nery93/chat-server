@@ -1,13 +1,16 @@
 package client
 
 import (
-	"github.com/gorilla/websocket"
+	"encoding/json"
 	"time"
+
+	"github.com/Nery93/chat-server/internal/message"
+	"github.com/gorilla/websocket"
 )
 
 const (
-	pongWait  = 60 * time.Second
-	writeWait = 10 * time.Second
+	pongWait   = 60 * time.Second
+	writeWait  = 10 * time.Second
 	pingPeriod = (pongWait * 9) / 10
 )
 
@@ -21,9 +24,8 @@ func (c *Client) WritePump() {
 
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
-	
-	for {
 
+	for {
 		select {
 		case message, ok := <-c.Send:
 			if !ok {
@@ -43,10 +45,9 @@ func (c *Client) WritePump() {
 				return
 			}
 		}
-		
+
 	}
 }
-
 
 func (c *Client) ReadPump() {
 
@@ -55,13 +56,23 @@ func (c *Client) ReadPump() {
 		c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
+
 	defer c.Conn.Close()
 	for {
-		_, message, err := c.Conn.ReadMessage()
+		_, raw, err := c.Conn.ReadMessage()
 		if err != nil {
 			break
 		}
-		c.Broadcast(message)
+		var msg message.Message
+		if err := json.Unmarshal(raw, &msg); err != nil {
+			continue
+		}
+		msg.Type = "chat"
+		convert, err := json.Marshal(msg)
+		if err != nil {
+			continue
+		}
+		c.Broadcast(convert)
 	}
 }
 
