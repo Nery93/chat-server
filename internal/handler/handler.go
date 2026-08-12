@@ -65,6 +65,15 @@ func NewRouter() *http.ServeMux {
 
 		go client.WritePump()
 		client.ReadPump()
+
+		var leaveRoom message.Message
+		leaveRoom.Type = "leave"
+		leaveRoom.User = user
+		leaveRoomJSON, err := json.Marshal(leaveRoom)
+		if err != nil {
+			return
+		}
+		roomObj.Broadcast(leaveRoomJSON)
 		roomObj.SairDaSala(client)
 	})
 
