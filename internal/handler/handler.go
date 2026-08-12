@@ -31,9 +31,8 @@ func NewRouter() *http.ServeMux {
 
 		if user == "" {
 			user = "Anonymous"
-			return
 		}
-		
+
 		mu.Lock()
 		roomObj, exists := rooms[sala]
 
