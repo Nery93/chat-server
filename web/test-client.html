@@ -248,12 +248,11 @@
 
     if (!room) { addSystem('Precisas de indicar uma sala.'); return; }
 
-    const wsUrl = `${base}/ws/${encodeURIComponent(room)}`;
+    const wsUrl = `${base}/ws/${encodeURIComponent(room)}?user=${encodeURIComponent(username)}`;
     ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
       setConnected(true);
-      addSystem(`Ligado a "${room}" como ${username}.`);
     };
 
     ws.onmessage = (event) => {
@@ -265,10 +264,18 @@
         return;
       }
 
-      if (msg.type === 'chat') {
-        addMessage(msg.user, msg.text, msg.user === username);
-      } else {
-        addSystem(msg.text || `[${msg.type}] ${msg.user || ''}`);
+      switch (msg.type) {
+        case 'chat':
+          addMessage(msg.user, msg.text, msg.user === username);
+          break;
+        case 'join':
+          addSystem(`${msg.user} entrou na sala.`);
+          break;
+        case 'leave':
+          addSystem(`${msg.user} saiu da sala.`);
+          break;
+        default:
+          addSystem(msg.text || `[${msg.type}] ${msg.user || ''}`);
       }
     };
 
