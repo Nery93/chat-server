@@ -27,6 +27,13 @@ func NewRouter() *http.ServeMux {
 	mux.HandleFunc("GET /ws/{sala_geral}", func(w http.ResponseWriter, r *http.Request) {
 
 		sala := r.PathValue("sala_geral")
+		user:= r.URL.Query().Get("user")
+
+		if user == "" {
+			user = "Anonymous"
+			return
+		}
+		
 		mu.Lock()
 		roomObj, exists := rooms[sala]
 
@@ -43,6 +50,7 @@ func NewRouter() *http.ServeMux {
 		}
 
 		client := client.NewClient(conn, roomObj.Broadcast)
+		client.Username = user
 		roomObj.EntrarNaSala(client)
 		go client.WritePump()
 		client.ReadPump()

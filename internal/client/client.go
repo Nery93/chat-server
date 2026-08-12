@@ -17,6 +17,7 @@ const (
 type Client struct {
 	Conn      *websocket.Conn
 	Send      chan []byte
+	Username  string
 	Broadcast func(message []byte)
 }
 
