@@ -22,3 +22,6 @@ go.work.sum
 # IDE
 .vscode/
 .idea/
+
+# Local AI-assistant notes — not for the public repo
+CLAUDE.md
