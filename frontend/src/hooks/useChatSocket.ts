@@ -12,10 +12,12 @@ export function useChatSocket() {
   const [messages, setMessages] = useState<LogEntry[]>([]);
   const [username, setUsername] = useState("");
   const socketRef = useRef<WebSocket | null>(null);
+  const leftIntentionallyRef = useRef(false);
 
   const connect = useCallback((room: string, user: string) => {
     if (socketRef.current) return;
 
+    leftIntentionallyRef.current = false;
     setStatus("connecting");
     setMessages([]);
     setUsername(user);
@@ -40,7 +42,7 @@ export function useChatSocket() {
     };
 
     socket.onclose = () => {
-      setStatus("offline");
+      setStatus(leftIntentionallyRef.current ? "idle" : "offline");
       socketRef.current = null;
     };
 
@@ -50,6 +52,7 @@ export function useChatSocket() {
   }, []);
 
   const disconnect = useCallback(() => {
+    leftIntentionallyRef.current = true;
     socketRef.current?.close();
   }, []);
 

@@ -24,6 +24,10 @@
   color: var(--ink-faint);
 }
 
+.message-log__event .message-log__time {
+  margin-right: 10px;
+}
+
 .message-log__row {
   display: grid;
   grid-template-columns: auto auto 1fr;
