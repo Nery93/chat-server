@@ -13,12 +13,13 @@ This project was built as a learning exercise in Go concurrency (goroutines, cha
 - Automatic announcements when someone joins or leaves a room
 - Keepalive via ping/pong and read/write deadlines, to detect dead connections
 - Graceful shutdown (`Ctrl+C` or `SIGTERM` let in-flight requests finish, with a timeout)
-- Standalone HTML/JS test client (`web/test-client.html`), no dependencies
+- Two test clients: a React/TypeScript console (`frontend/`) and a standalone, dependency-free HTML/JS page (`web/test-client.html`)
 
 ## Stack
 
 - Go — native `net/http`, no routing framework
 - [`gorilla/websocket`](https://github.com/gorilla/websocket) for the WebSocket protocol
+- React 19 + TypeScript + Vite for the test client
 - Docker + Docker Compose
 - No database — in-memory state
 
@@ -32,8 +33,9 @@ This project was built as a learning exercise in Go concurrency (goroutines, cha
 │   ├── room/              # a room's client list, broadcast
 │   ├── handler/          # HTTP routes, WebSocket upgrade, room/client wiring
 │   └── message/          # message format (JSON)
+├── frontend/             # React/TypeScript test console (Vite)
 └── web/
-    └── test-client.html   # standalone test client
+    └── test-client.html   # standalone, dependency-free test client
 ```
 
 ## Getting started
@@ -62,10 +64,21 @@ Available at `http://localhost:8080` (configurable in `docker-compose.yml`).
 
 ## Trying it out
 
-1. Start the server (either method above).
-2. Open `web/test-client.html` directly in your browser — no need to serve it from anywhere.
-3. Enter a name and a room, and connect.
-4. Open the same file in another tab, with a different name, in the same room, to simulate a conversation between two users.
+Start the server first (either method above), then use one of the two clients:
+
+**React console** (`frontend/`):
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open the printed local URL, enter a name and a room, and connect. Open it again in another tab with a different name, in the same room, to simulate a conversation between two users. The WebSocket address defaults to `ws://localhost:8080` and isn't shown in the UI; override it by copying `frontend/.env.example` to `.env` and setting `VITE_WS_URL`.
+
+**Plain HTML client** (`web/test-client.html`):
+
+Open the file directly in your browser — no install, no server needed to serve it.
 
 ### Routes
 

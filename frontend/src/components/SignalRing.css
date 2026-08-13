@@ -1,0 +1,72 @@
+.signal-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.signal-ring--small {
+  width: 10px;
+  height: 10px;
+}
+
+.signal-ring--large {
+  width: 88px;
+  height: 88px;
+}
+
+.signal-ring__core {
+  position: relative;
+  z-index: 1;
+  width: 34%;
+  height: 34%;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  transition: background 0.3s ease;
+}
+
+.signal-ring--online .signal-ring__core,
+.signal-ring--connecting .signal-ring__core {
+  background: var(--signal);
+}
+
+.signal-ring--offline .signal-ring__core {
+  background: var(--danger);
+}
+
+.signal-ring__pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--signal);
+  opacity: 0;
+}
+
+.signal-ring--online .signal-ring__pulse,
+.signal-ring--connecting .signal-ring__pulse {
+  animation: signal-pulse 2.4s ease-out infinite;
+}
+
+.signal-ring--connecting .signal-ring__pulse {
+  animation-duration: 1s;
+}
+
+.signal-ring__pulse--delay {
+  animation-delay: 1.2s;
+}
+
+.signal-ring--connecting .signal-ring__pulse--delay {
+  animation-delay: 0.5s;
+}
+
+@keyframes signal-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
