@@ -27,7 +27,7 @@ func NewRouter() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /ws/{sala_geral}", func(w http.ResponseWriter, r *http.Request) {
-
+	
 		sala := r.PathValue("sala_geral")
 		user:= r.URL.Query().Get("user")
 
@@ -75,6 +75,27 @@ func NewRouter() *http.ServeMux {
 		}
 		roomObj.Broadcast(leaveRoomJSON)
 		roomObj.SairDaSala(client)
+	})
+
+	mux.HandleFunc("GET /rooms",func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+
+		for roomName, roomObj := range rooms {
+			if roomObj.ClientCount() == 0 {
+				delete(rooms, roomName)
+			}
+		}
+
+		roomList := make(map[string]int)
+
+		for roomName, roomObj := range rooms {
+			roomList[roomName] = roomObj.ClientCount()
+		}
+
+		mu.Unlock()
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(roomList)
 	})
 
 	return mux

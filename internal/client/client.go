@@ -57,6 +57,7 @@ func (c *Client) ReadPump() {
 		c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
+	c.Conn.SetReadLimit(4096)
 
 	defer c.Conn.Close()
 	for {

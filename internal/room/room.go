@@ -38,7 +38,11 @@ func (r *Room) Broadcast(message []byte) {
 	}
 }
 
-
+func (r *Room) ClientCount() int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return len(r.Clients)
+}
 
 func NewRoom() *Room {
 	return &Room{

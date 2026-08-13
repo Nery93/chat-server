@@ -3,6 +3,8 @@ import { SignalRing } from "./SignalRing";
 import type { ConnectionStatus } from "../types";
 import "./TuningPanel.css";
 
+const ROOM = "geral";
+
 interface TuningPanelProps {
   status: ConnectionStatus;
   onConnect: (room: string, user: string) => void;
@@ -10,12 +12,11 @@ interface TuningPanelProps {
 
 export function TuningPanel({ status, onConnect }: TuningPanelProps) {
   const [name, setName] = useState("");
-  const [room, setRoom] = useState("geral");
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !room.trim()) return;
-    onConnect(room.trim(), name.trim());
+    if (!name.trim()) return;
+    onConnect(ROOM, name.trim());
   };
 
   const connecting = status === "connecting";
@@ -39,14 +40,9 @@ export function TuningPanel({ status, onConnect }: TuningPanelProps) {
         </label>
         <label className="tuning-panel__field">
           <span>sala</span>
-          <input
-            value={room}
-            onChange={(e) => setRoom(e.target.value)}
-            placeholder="geral"
-            disabled={connecting}
-          />
+          <input value={ROOM} disabled readOnly />
         </label>
-        <button type="submit" disabled={connecting || !name.trim() || !room.trim()}>
+        <button type="submit" disabled={connecting || !name.trim()}>
           {connecting ? "a sintonizar..." : "entrar na sala"}
         </button>
       </form>
