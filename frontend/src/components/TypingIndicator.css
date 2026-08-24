@@ -1,0 +1,48 @@
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 24px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--ink-faint);
+  min-height: 26px;
+}
+
+.typing-indicator--empty {
+  padding: 0;
+  min-height: 26px;
+}
+
+.typing-indicator__dots {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.typing-indicator__dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
+
+.typing-indicator__dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-indicator__dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typing-bounce {
+  0%, 60%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}

@@ -57,8 +57,8 @@ func (c *Client) ReadPump() {
 		c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
-	c.Conn.SetReadLimit(4096)
-
+	
+c.Conn.SetReadLimit(4096)
 	defer c.Conn.Close()
 	for {
 		_, raw, err := c.Conn.ReadMessage()
@@ -69,7 +69,10 @@ func (c *Client) ReadPump() {
 		if err := json.Unmarshal(raw, &msg); err != nil {
 			continue
 		}
-		msg.Type = "chat" 
+
+		if msg.Type != "typing" {
+			msg.Type = "chat"
+		}
 		msg.User = c.Username
 		convert, err := json.Marshal(msg)
 		if err != nil {

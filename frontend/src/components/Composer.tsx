@@ -3,10 +3,11 @@ import "./Composer.css";
 
 interface ComposerProps {
   onSend: (text: string) => void;
+  onTyping: () => void;
   disabled: boolean;
 }
 
-export function Composer({ onSend, disabled }: ComposerProps) {
+export function Composer({ onSend, onTyping, disabled }: ComposerProps) {
   const [text, setText] = useState("");
 
   const submit = (e: FormEvent) => {
@@ -23,7 +24,10 @@ export function Composer({ onSend, disabled }: ComposerProps) {
         className="composer__input"
         type="text"
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value);
+          if (e.target.value.trim()) onTyping();
+        }}
         placeholder="escreve uma mensagem..."
         disabled={disabled}
         autoComplete="off"
