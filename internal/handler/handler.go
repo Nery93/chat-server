@@ -27,9 +27,9 @@ func NewRouter() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /ws/{sala_geral}", func(w http.ResponseWriter, r *http.Request) {
-	
+
 		sala := r.PathValue("sala_geral")
-		user:= r.URL.Query().Get("user")
+		user := r.URL.Query().Get("user")
 
 		if user == "" {
 			user = "Anonymous"
@@ -61,7 +61,17 @@ func NewRouter() *http.ServeMux {
 		if err != nil {
 			return
 		}
+
 		roomObj.Broadcast(enterRoomJSON)
+
+		var userList message.Message
+		userList.Type = "userlist"
+		userList.Users = roomObj.Usernames()
+		userListJSON, err := json.Marshal(userList)
+		if err != nil {
+			return
+		}
+		roomObj.Broadcast(userListJSON)
 
 		go client.WritePump()
 		client.ReadPump()
@@ -73,11 +83,23 @@ func NewRouter() *http.ServeMux {
 		if err != nil {
 			return
 		}
+
 		roomObj.Broadcast(leaveRoomJSON)
 		roomObj.SairDaSala(client)
+		
+		var updatedUserList message.Message
+		updatedUserList.Type = "userlist"
+		updatedUserList.Users = roomObj.Usernames()
+		updatedUserListJSON, err := json.Marshal(updatedUserList)
+		if err != nil {
+			return
+		}
+		roomObj.Broadcast(updatedUserListJSON)
+
+
 	})
 
-	mux.HandleFunc("GET /rooms",func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /rooms", func(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 
 		for roomName, roomObj := range rooms {
