@@ -44,6 +44,18 @@ func (r *Room) ClientCount() int {
 	return len(r.Clients)
 }
 
+func (r *Room) Usernames() []string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	usernames := make([]string, 0, len(r.Clients))
+	for c := range r.Clients {
+		usernames = append(usernames, c.Username)
+	}
+
+	return usernames
+}
+
 func NewRoom() *Room {
 	return &Room{
 		Clients: make(map[*client.Client]bool),

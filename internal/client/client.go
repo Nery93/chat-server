@@ -75,6 +75,7 @@ func (c *Client) ReadPump() {
 		if err != nil {
 			continue
 		}
+		
 		c.Broadcast(convert)
 	}
 }
