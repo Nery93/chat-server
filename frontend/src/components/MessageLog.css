@@ -71,3 +71,85 @@
   line-height: 1.5;
   word-break: break-word;
 }
+
+.message-log__text > :first-child {
+  margin-top: 0;
+}
+
+.message-log__text > :last-child {
+  margin-bottom: 0;
+}
+
+.message-log__text p,
+.message-log__text ul,
+.message-log__text ol,
+.message-log__text pre,
+.message-log__text table {
+  margin: 0 0 12px;
+}
+
+.message-log__text h1,
+.message-log__text h2,
+.message-log__text h3 {
+  margin: 14px 0 6px;
+  color: var(--signal);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.message-log__text ul,
+.message-log__text ol {
+  padding-left: 20px;
+}
+
+.message-log__text li + li {
+  margin-top: 4px;
+}
+
+.message-log__text hr {
+  margin: 14px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.message-log__text code {
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--teal) 16%, transparent);
+  color: var(--teal);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.message-log__text pre {
+  overflow-x: auto;
+  padding: 10px;
+  border-left: 2px solid var(--teal);
+  background: color-mix(in srgb, var(--teal) 8%, transparent);
+}
+
+.message-log__text pre code {
+  padding: 0;
+  background: none;
+}
+
+.message-log__text table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.message-log__text th,
+.message-log__text td {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.message-log__text th {
+  color: var(--signal);
+  font-family: var(--font-mono);
+  font-weight: 500;
+}

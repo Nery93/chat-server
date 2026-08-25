@@ -2,8 +2,11 @@ package client
 
 import (
 	"encoding/json"
+	"log"
+	"strings"
 	"time"
 
+	"github.com/Nery93/chat-server/internal/ai"
 	"github.com/Nery93/chat-server/internal/message"
 	"github.com/gorilla/websocket"
 )
@@ -57,9 +60,10 @@ func (c *Client) ReadPump() {
 		c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
-	
-c.Conn.SetReadLimit(4096)
+
+	c.Conn.SetReadLimit(4096)
 	defer c.Conn.Close()
+
 	for {
 		_, raw, err := c.Conn.ReadMessage()
 		if err != nil {
@@ -70,15 +74,35 @@ c.Conn.SetReadLimit(4096)
 			continue
 		}
 
+		if strings.HasPrefix(msg.Text, "/ai ") {
+			response, err := ai.AskGenerateResponse(msg.Text[4:])
+			if err != nil {
+				log.Println("Erro ao gerar resposta de IA: ", err)
+				continue
+			}
+			var aiMessage message.Message
+			aiMessage.Type = "chat"
+			aiMessage.User = "AI"
+			aiMessage.Text = response
+			convert, err := json.Marshal(aiMessage)
+			if err != nil {
+				log.Println("Erro ao converter mensagem de IA: ", err)
+				continue
+			}
+			c.Broadcast(convert)
+			continue
+		}
+
 		if msg.Type != "typing" {
 			msg.Type = "chat"
 		}
+
 		msg.User = c.Username
 		convert, err := json.Marshal(msg)
 		if err != nil {
 			continue
 		}
-		
+
 		c.Broadcast(convert)
 	}
 }

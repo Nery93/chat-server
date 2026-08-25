@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { LogEntry } from "../types";
 import "./MessageLog.css";
 
@@ -52,7 +54,9 @@ export function MessageLog({ entries, ownUsername }: MessageLogProps) {
           >
             <span className="message-log__time">{formatTime(entry.receivedAt)}</span>
             <span className="message-log__user">{mine ? "você" : entry.user}</span>
-            <span className="message-log__text">{entry.text}</span>
+            <div className="message-log__text">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{entry.text}</ReactMarkdown>
+            </div>
           </div>
         );
       })}
