@@ -104,7 +104,7 @@ func NewAIRequest(prompt string) *AIRequest {
 			},
 		},
 		Stream:             false,
-		MaxTokens:          800,
+		MaxTokens:          1500,
 		ChatTemplateKwargs: ChatTemplateKwargs{EnableThinking: false},
 	}
 }
