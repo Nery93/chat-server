@@ -75,21 +75,25 @@ func (c *Client) ReadPump() {
 		}
 
 		if strings.HasPrefix(msg.Text, "/ai ") {
-			response, err := ai.AskGenerateResponse(msg.Text[4:])
-			if err != nil {
-				log.Println("Erro ao gerar resposta de IA: ", err)
-				continue
-			}
-			var aiMessage message.Message
-			aiMessage.Type = "chat"
-			aiMessage.User = "AI"
-			aiMessage.Text = response
-			convert, err := json.Marshal(aiMessage)
-			if err != nil {
-				log.Println("Erro ao converter mensagem de IA: ", err)
-				continue
-			}
-			c.Broadcast(convert)
+			prompt := msg.Text[4:]
+			go func() {
+				response, err := ai.AskGenerateResponse(prompt)
+				if err != nil {
+					log.Println("Erro ao gerar resposta de IA: ", err)
+					return
+				}
+				aiMessage := message.Message{
+					Type: "chat",
+					User: "AI",
+					Text: response,
+				}
+				convert, err := json.Marshal(aiMessage)
+				if err != nil {
+					log.Println("Erro ao converter mensagem de IA: ", err)
+					return
+				}
+				c.Broadcast(convert)
+			}()
 			continue
 		}
 
