@@ -1,72 +1,108 @@
 # chat-server
 
-A real-time chat server written in Go, using plain WebSocket (no HTTP framework). Users join a room through a URL, and every message is broadcast in real time to everyone in that room — no polling, no repeated HTTP requests.
+A real-time, multi-room chat application built with Go and WebSockets. Users can join a room, exchange messages instantly, see who is online, and ask an NVIDIA Nemotron AI assistant for help with the `/ai` command.
 
-This project was built as a learning exercise in Go concurrency (goroutines, channels, mutexes, context, graceful shutdown), applied to a real use case: a WebSocket server handling multiple rooms and multiple concurrent clients.
+The project was built to practice Go concurrency patterns in a real application: goroutines, channels, mutexes, contexts, and graceful shutdown.
 
 ## Features
 
-- Multiple rooms, created dynamically from the name used in the URL
-- Broadcast of messages to every client in a room, protected by a mutex
-- Structured JSON messages (`chat`, `join`, `leave`), with the type and sender always validated/enforced server-side — a client can't impersonate another user or fake a system message
-- User identification via query string (`?user=name`)
-- Automatic announcements when someone joins or leaves a room
-- Keepalive via ping/pong and read/write deadlines, to detect dead connections
-- Graceful shutdown (`Ctrl+C` or `SIGTERM` let in-flight requests finish, with a timeout)
-- Two test clients: a React/TypeScript console (`frontend/`) and a standalone, dependency-free HTML/JS page (`web/test-client.html`)
+- Multiple rooms created dynamically from the WebSocket URL
+- Real-time WebSocket messaging with no polling or repeated HTTP requests
+- Structured JSON messages for chat, join, leave, typing, and online-user updates
+- Server-enforced user identity and message types, preventing clients from impersonating users or sending system messages
+- Online user list for each room
+- Typing indicator
+- Join and leave announcements
+- Ping/pong keepalive with read and write deadlines
+- Message size limit of 4 KB
+- AI assistant powered by NVIDIA Nemotron, triggered only with `/ai <question>`
+- Token usage logging in the server terminal for every AI response
+- Graceful shutdown on `Ctrl+C` or `SIGTERM`
+- Automated tests for room, client, and handler behavior
 
-## Stack
+## Tech Stack
 
-- Go — native `net/http`, no routing framework
-- [`gorilla/websocket`](https://github.com/gorilla/websocket) for the WebSocket protocol
-- React 19 + TypeScript + Vite for the test client
-- Docker + Docker Compose
-- No database — in-memory state
+- Go 1.25+ with native `net/http`
+- [`gorilla/websocket`](https://github.com/gorilla/websocket)
+- React 19, TypeScript, and Vite
+- [`react-markdown`](https://github.com/remarkjs/react-markdown) with GitHub Flavored Markdown support
+- NVIDIA NIM API using `nvidia/nemotron-3-ultra-550b-a55b`
+- Docker and Docker Compose
 
-## Project structure
+## Architecture
 
+```text
+Browser
+    | WebSocket
+    v
+Go HTTP server
+    |-- handler: upgrades the connection and assigns a room
+    |-- client: reads and writes WebSocket messages
+    |-- room: manages connected clients and broadcasts messages
+    |-- ai: calls NVIDIA Nemotron when a user sends /ai
+    v
+React chat console
 ```
-/
-├── main.go              # server startup, graceful shutdown
+
+Each connected client has its own goroutines for reading and writing. Rooms protect their shared client list with a mutex, while channels carry broadcast messages to connected clients.
+
+## Project Structure
+
+```text
+.
+├── main.go                 # Server startup and graceful shutdown
 ├── internal/
-│   ├── client/           # a connected WebSocket client (read/write)
-│   ├── room/              # a room's client list, broadcast
-│   ├── handler/          # HTTP routes, WebSocket upgrade, room/client wiring
-│   └── message/          # message format (JSON)
-├── frontend/             # React/TypeScript test console (Vite)
-└── web/
-    └── test-client.html   # standalone, dependency-free test client
+│   ├── ai/                 # NVIDIA Nemotron integration
+│   ├── client/             # Connected WebSocket client read/write loops
+│   ├── handler/            # HTTP routes and WebSocket upgrade
+│   ├── message/            # WebSocket JSON message structure
+│   └── room/               # Room membership and broadcast logic
+├── frontend/               # React/TypeScript chat console
+└── web/test-client.html    # Standalone browser test client
 ```
 
-## Getting started
+## Getting Started
 
-### With Go, locally
+### Prerequisites
 
-Requires Go 1.25+.
+- Go 1.25+
+- Node.js and npm, for the React client
+- An NVIDIA API key, only when using the `/ai` command
+
+### Run the server locally
 
 ```bash
 go run .
 ```
 
-Runs on port `8080` by default. To use a different port:
+The server listens on port `8080` by default. Set `PORT` to use a different port:
 
 ```bash
 PORT=9000 go run .
 ```
 
-### With Docker
+### Configure AI
+
+The AI integration reads its key from `NVIDIA_API_KEY`. Export it in the same terminal before starting the server:
+
+```bash
+export NVIDIA_API_KEY="your-key-here"
+go run .
+```
+
+Never commit API keys. The root `.env` file is ignored by Git, but Go does not load it automatically.
+
+### Run with Docker
 
 ```bash
 docker compose up --build
 ```
 
-Available at `http://localhost:8080` (configurable in `docker-compose.yml`).
+The API is available at `http://localhost:8080`. To use AI in Docker, pass `NVIDIA_API_KEY` into the `chat-server` service environment in `docker-compose.yml`.
 
-## Trying it out
+### Run the React client
 
-Start the server first (either method above), then use one of the two clients:
-
-**React console** (`frontend/`):
+In a second terminal:
 
 ```bash
 cd frontend
@@ -74,20 +110,68 @@ npm install
 npm run dev
 ```
 
-Open the printed local URL, enter a name and a room, and connect. Open it again in another tab with a different name, in the same room, to simulate a conversation between two users. The WebSocket address defaults to `ws://localhost:8080` and isn't shown in the UI; override it by copying `frontend/.env.example` to `.env` and setting `VITE_WS_URL`.
+Open the local URL printed by Vite. Connect from a second browser tab with another username to test a real-time conversation.
 
-**Plain HTML client** (`web/test-client.html`):
+The client connects to `ws://localhost:8080` by default. Set `VITE_WS_URL` in `frontend/.env` to point it at another server.
 
-Open the file directly in your browser — no install, no server needed to serve it.
+### Use the standalone client
 
-### Routes
+Open `web/test-client.html` directly in a browser. It does not require npm or a frontend development server.
 
+## Routes
+
+| Method | Route | Description |
+| --- | --- | --- |
+| `GET` | `/ws/{room}?user={name}` | Upgrades the connection to WebSocket and joins the selected room. The default user is `Anonymous`. |
+| `GET` | `/rooms` | Returns active rooms and their current client counts as JSON. |
+
+## AI Assistant
+
+Send a message beginning with `/ai ` followed by a question:
+
+```text
+/ai Explain how WebSockets work
 ```
-GET /ws/{room}?user={name}   → upgrades to WebSocket, joins "room" identified as "name"
+
+The command itself is not broadcast to the room. The server sends the assistant response as a normal chat message from `AI` and logs the token usage in the server terminal:
+
+```text
+Uso NVIDIA: prompt=22 resposta=800 total=822
 ```
 
-If `user` is not provided, the server defaults to `"Anonymous"`.
+The current response limit is `1500` completion tokens. It can be adjusted in `internal/ai/ai.go` through `MaxTokens`.
 
-## Roadmap
+## Testing
 
-This project's history and next steps are documented in [`CLAUDE.md`](./CLAUDE.md).
+Run all Go tests:
+
+```bash
+go test ./...
+```
+
+Validate the frontend:
+
+```bash
+cd frontend
+npm run build
+npm run lint
+```
+
+## Current Limitations
+
+- AI responses use a non-streaming request, so the chat receives the response only after NVIDIA finishes generating it.
+- AI calls currently run synchronously inside the client's read loop.
+- Messages and rooms live only in memory and disappear when the server restarts.
+- No rate limiting is applied to `/ai` requests yet.
+
+## Next Steps
+
+- Stream AI responses token by token
+- Run AI requests independently so a client can keep sending messages while the model responds
+- Add timeouts and user-visible AI error messages
+- Add rate limiting for AI requests
+- Persist chat history
+
+## License
+
+This repository is intended as a learning project.
